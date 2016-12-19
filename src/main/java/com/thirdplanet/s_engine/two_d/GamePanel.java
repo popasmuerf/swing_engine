@@ -15,6 +15,14 @@ public class GamePanel extends JPanel implements Runnable{
         public GamePanel(){
                 setBackground(Color.white) ;
                 setPreferredSize(new Dimension(PWIDTH,PHEIGHT) ;
+                setFocusable(true);
+                requestFocus();//JPanel can now receive key events
+                readyForTermination();
+                //create game components
+                //listen for mouse presses
+                addMouseListener(new MouseAdatper(){
+                        public void mousePressed(MouseEvent e){testPress(e.getX(),e.getY());
+                });
         }
         public void addNotify(){
                 super.addNotify() ;
@@ -28,6 +36,17 @@ public class GamePanel extends JPanel implements Runnable{
         }
         public void stopGame(){
                 running = false ;
+        }
+        private void testPress(int x, int y){
+                //do something
+        }
+        private void readyForTermination(){
+                addKeyListener(new KeyAdapter(){
+                        int keyCode = e.getKeyCode();
+                        if((keyCode == KyeEvent.VK_ESCAPE) ||(keyCode == KyeEvent.VK_Q)||(keyCode == KyeEvent.VK_END)||(keyCode == KyeEvent.VK_C)&& e.isControlDown()){
+                                running = false ;
+                        }
+                });
         }
         private void gameOverMessage(Graphics g){
                 g.drawString(msg,x,y);
@@ -52,12 +71,24 @@ public class GamePanel extends JPanel implements Runnable{
                         }
                 }
         }
+        private void paintScreen(){
+                Graphics g ;
+                try{
+                        g = this.getGraphics();
+                        if((g!=null)&&(dbImage !=null)){
+                                g.drawImage(dbImage,0,0,null);
+                                g.dispose();
+                        }
+                }catch(Exception e){
+                        System.out.println("Graphics context error: " + e);
+                }
+        }
         public void run(){
                 running =  true ;
                 while(running){
                         gameUpdate() ;
                         gameRender();
-                        repaint();
+                        paintScreen();
                         try{
                                 Thread.sleep(20);
                         }catch(InterruptedException ex){}
