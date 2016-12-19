@@ -1,4 +1,5 @@
-http://fivedots.coe.psu.ac.th/~ad/jg/ch1/index.html
+//http://fivedots.coe.psu.ac.th/~ad/jg/ch1/index.html
+//http://fivedots.coe.psu.ac.th/~ad/jg/ch1/ch1.pdf
 import javax.swing.* ;
 
 public class GamePanel extends JPanel implements Runnable{
