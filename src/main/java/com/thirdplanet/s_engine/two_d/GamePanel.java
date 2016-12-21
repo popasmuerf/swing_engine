@@ -1,28 +1,34 @@
-//http://fivedots.coe.psu.ac.th/~ad/jg/ch1/index.html
+package com.thirdplanet.s_engine.two_d;//http://fivedots.coe.psu.ac.th/~ad/jg/ch1/index.html
 //http://fivedots.coe.psu.ac.th/~ad/jg/ch1/ch1.pdf
 import javax.swing.* ;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.event.KeyEvent;
 
-public class GamePanel extends JPanel implements Runnable{
+public class GamePanel extends JPanel implements Runnable {
         private static final int PWIDTH = 500 ;
         private static final int PHEIGHT = 400 ;
 
-        private Thread animator ;
+        private Thread animator = null  ;
         private boolean running = false ;
         private boolean gameOver = false ;
 
         private Graphics dbg ;
         private Image dbImage = null ;
+        private String msg = "" ;
+        private int x = 0 ;
+        private int y = 0 ;
 
-        public GamePanel(){
-                setBackground(Color.white) ;
-                setPreferredSize(new Dimension(PWIDTH,PHEIGHT)) ;
+        public GamePanel() {
+                setBackground(Color.white);
+                setPreferredSize(new Dimension(PWIDTH, PHEIGHT));
                 setFocusable(true);
                 requestFocus();//JPanel can now receive key events
                 readyForTermination();
-                //create game components
-                //listen for mouse presses
-                addMouseListener(new MouseAdatper(){
-                        public void mousePressed(MouseEvent e){testPress(e.getX(),e.getY());
+                this.addMouseListener(new MouseAdapter() {
+                        public void mousePressed(MouseEvent e){
+                                testPress(e.getX(), e.getY());
+                        }
                 });
         }
         public void addNotify(){
@@ -30,7 +36,7 @@ public class GamePanel extends JPanel implements Runnable{
                 startGame() ;
         }
         private void startGame(){
-                if(!animator || !running){
+                if(animator != null || running != false){
                         animator = new Thread(this) ;
                         animator.start() ;
                 }
@@ -42,10 +48,12 @@ public class GamePanel extends JPanel implements Runnable{
                 //do something
         }
         private void readyForTermination(){
-                addKeyListener(new KeyAdapter(){
-                        int keyCode = e.getKeyCode();
-                        if((keyCode == KyeEvent.VK_ESCAPE) ||(keyCode == KyeEvent.VK_Q)||(keyCode == KyeEvent.VK_END)||(keyCode == KyeEvent.VK_C)&& e.isControlDown()){
-                                running = false ;
+                this.addKeyListener(new KeyAdapter(){
+                        public void keyPressed(KeyEvent e){
+                                int keyCode = e.getKeyCode();
+                                if((keyCode == KeyEvent.VK_ESCAPE) ||(keyCode == KeyEvent.VK_Q)||(keyCode == KeyEvent.VK_END)||(keyCode == KeyEvent.VK_C)&& e.isControlDown()){
+                                        running = false ;
+                                }
                         }
                 });
         }

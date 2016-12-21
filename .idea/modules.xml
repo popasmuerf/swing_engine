@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/swing_engine.iml" filepath="$PROJECT_DIR$/.idea/modules/swing_engine.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/swing_engine_main.iml" filepath="$PROJECT_DIR$/.idea/modules/swing_engine_main.iml" group="swing_engine" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/swing_engine_test.iml" filepath="$PROJECT_DIR$/.idea/modules/swing_engine_test.iml" group="swing_engine" />
+    </modules>
+  </component>
+</project>
