@@ -93,14 +93,27 @@ public class GamePanel extends JPanel implements Runnable {
                 }
         }
         public void run(){
+                long beforeTime ;
+                long beforeNanoTime ;
+                long beforeJ3DTime ;
+                long timeDiff ;
+                long sleepTime ;
+                long period = 10 ;
                 running =  true ;
+                beforeTime = System.nanoTime();
                 while(running){
                         gameUpdate() ;
                         gameRender();
                         paintScreen();
+                        timeDiff = System.nanoTime() - beforeTime ;
+                        timeDiff = period - timeDiff;
+                        if(timeDiff<= 0){
+                                sleepTime = 5 ;
+                        }
                         try{
                                 Thread.sleep(20);
                         }catch(InterruptedException ex){}
+                        beforeTime = System.nanoTime() ;
                 }
                 System.exit(0);
         }
