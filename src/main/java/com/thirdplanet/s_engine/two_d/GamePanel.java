@@ -5,13 +5,69 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.event.KeyEvent;
 
+/**
+ * A core technology for a good game is an animation
+ * algorithm that produces reliably fast game play
+ * across various operating systems(e.g. flavors of Widows, Linux an d
+ * OSX)...and in different types of jvm based programs, applets
+ * , windoewd , and full-scrren applications).
+ *
+ * GamePanel is a JPanel subclass witch acts as a 2D canvas
+ * for drawing 2D graphics(lines, circles, text, images).
+ *
+ * Animation is managed by a thread, which ensures that it
+ * it progresses at a fairly consistent rate(FPS), where a frame
+ * corresponds to a sinle rendering of the application canvas.
+ *
+ * {update, render, sleep} animation loop
+ *
+ * -Starting and terminating an animation
+ * -double buffering
+ * -user interaction
+ * -active rendering
+ * -andimation control based on a user's requested FPS
+ * -management of inaccuracies in the timer and sleep operations
+ * -Combining FPS and game state updates per seconds(UPS)
+ * -Game pausing and resumption
+ *
+ * Threads:  We have two main ones here
+ * -----------------------------------------------------
+ * 1. Main thread(GUI, events)
+ * 2. animator thread(updates and rendering)
+ * JMM deals with this via forcing atomicity on all
+ * variables save for longs and doubles.
+ * 3. Set variables whom state is globally important to volatile
+ * so that their currently extant values may not be copied to local
+ * thread memory.
+ *
+ *
+ * Why are making the animation thread sleep for a few "moments ?
+ * -----------------------------------------------------------------
+ * We want to give the jvm time to garbage collect....or rather
+ * ensure that the jvm will garbage collect....otherwise there is
+ * a real possiblity that our animation thread will hog up most of the
+ * CPU time(I am guessing...need more infor on how the jvm does things
+ * these days..)
+ *
+ * We also want to give the preceding call to repaint() time to finish...
+ * everytime we call repaint()  the request is placed on the jvm's
+ * event queue and then returns.  When this request is completed is
+ * not up to us....
+ *
+ * The repaint request will be processed, precolating down
+ * through the components of the application until
+ * GamePanel's paintComponent() is called....so is 20 ms to
+ * generous ?  Maybe it's just right...as it also prevents event
+ * coalescence...where a jvm overloaded with events may drop some...
+ * bad juju.....
+ */
 public class GamePanel extends JPanel implements Runnable {
         private static final int PWIDTH = 500 ;
         private static final int PHEIGHT = 400 ;
 
         private Thread animator = null  ;
-        private boolean running = false ;
-        private boolean gameOver = false ;
+        private volatile boolean running = false ;
+        private volatile boolean gameOver = false ;
 
         private Graphics dbg ;
         private Image dbImage = null ;
@@ -31,16 +87,26 @@ public class GamePanel extends JPanel implements Runnable {
                         }
                 });
         }
+        /**Wait for the JPanel to be added to the
+         * JFrame/JApplet before starting via
+         * creating a peer and then starting the
+         * thread.*/
         public void addNotify(){
                 super.addNotify() ;
                 startGame() ;
         }
+
+        /**
+         * Initialize and start the thread
+         */
         private void startGame(){
                 if(animator != null || running != false){
                         animator = new Thread(this) ;
                         animator.start() ;
                 }
         }
+        /**Kills game by setting running flag
+         * to false */
         public void stopGame(){
                 running = false ;
         }
@@ -66,10 +132,17 @@ public class GamePanel extends JPanel implements Runnable {
                         g.drawImage(dbImage,0,0, null);
                 }
         }
+        /**gameRender() draws into its own Graphics object(dbg), which
+         * represents an image the same size as the screen(dbImage)
+         * It draws the into its own Graphics object(dbj), which represents
+         * an image the same size as teh screen (dbImage)*/
         public void gameRender(){
                 if(dbImage == null){
-                        System.out.println("dbImage is null") ;
-                        return ;
+                        dbImage = createImage(PWIDTH,PHEIGHT);
+                        if(dbImage == null){
+                            System.out.println("dbImage is null") ;
+                            return ;
+                        }
                 }else{
                         dbg = dbImage.getGraphics();
                         dbg.setColor(Color.white);
@@ -80,6 +153,11 @@ public class GamePanel extends JPanel implements Runnable {
                         }
                 }
         }
+    /**Previously we drew our image in gameRender()...this was
+     * our first buffer...now
+     * ...this is our 2nd buffer.....
+     * we use drawImage() which is fast enough to make things seem
+     * instantaneous...*/
         private void paintScreen(){
                 Graphics g ;
                 try{
@@ -92,6 +170,7 @@ public class GamePanel extends JPanel implements Runnable {
                         System.out.println("Graphics context error: " + e);
                 }
         }
+        /**Repeatedly updates, renders, sleeps */
         public void run(){
                 long beforeTime ;
                 long beforeNanoTime ;
@@ -117,7 +196,10 @@ public class GamePanel extends JPanel implements Runnable {
                 }
                 System.exit(0);
         }
+        /** */
         private void gameUpdate(){
-                //....
+                if(!gameOver){
+                        //update game state
+                }
         }
 }
