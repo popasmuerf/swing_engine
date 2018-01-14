@@ -68,7 +68,10 @@ public class GamePanel extends JPanel implements Runnable {
         private Thread animator = null  ;
         private volatile boolean running = false ;
         private volatile boolean gameOver = false ;
+        private volatile boolean isPaused = false ;
 
+        private static int MAX_FRAME_SKIPS = 5 ;
+        private static int NO_DELAYS_PER_YIELD = 0 ;
         private Graphics dbg ;
         private Image dbImage = null ;
         private String msg = "" ;
@@ -110,8 +113,14 @@ public class GamePanel extends JPanel implements Runnable {
         public void stopGame(){
                 running = false ;
         }
+
+        /**For testing mouse activity ....   */
         private void testPress(int x, int y){
-                //do something
+                //is (x,y) is important to the game ?
+                if(!isPaused && !gameOver){
+                        //do something
+                }
+
         }
         private void readyForTermination(){
                 this.addKeyListener(new KeyAdapter(){
@@ -132,6 +141,48 @@ public class GamePanel extends JPanel implements Runnable {
                         g.drawImage(dbImage,0,0, null);
                 }
         }
+
+        /**
+         * Even with the most exciting game, there comes a a time
+         * when the user wants to pause it(and resume later).
+         *
+         * One largely discredited coding appraoch is to use
+         * Thread.suspend() and resume.  these methods are deprecated
+         * for a similar reason to Thread.stop(); suspend() can
+         * cause applet/application to suspend at any point in its
+         * execution.  Tis can easily lead to deadlock...as the thread
+         * is holding a resource since it will be releasedunilt the
+         * thread resumes.
+         *
+         * Instead, use Thread.wait() ; and Thread.notify to implement
+         * puase and resume functionality.  The idea here is to suspend the
+         * animation thread, but the event dispatcher thread will still
+         * respond to GUI activity.
+         *
+         * Though the elements of the game seen by the user
+         * can pause, it is often useful for the other parts
+         * to contine executiong.  For example, in a network
+         * game, it may be necessary to monitor sockets for
+         * messages comming from other players....
+         *
+         * Key presses are still handled by  the KeyListener method
+         * since it must be possible to quit even in the paused state....
+         *
+         *
+         * We don't want isPaused() to be monitored in the run() method
+         * since the animation thread doesn't suspend.  isPaused() is
+         * used to switch off testPress() and gameUpdate()
+         *
+         *
+         */
+
+        public void pauseGame(){
+                isPaused = true ;
+        }
+        public void resumeGame(){
+                isPaused = false ;
+        }
+
         /**gameRender() draws into its own Graphics object(dbg), which
          * represents an image the same size as the screen(dbImage)
          * It draws the into its own Graphics object(dbj), which represents
@@ -172,20 +223,71 @@ public class GamePanel extends JPanel implements Runnable {
         }
         /**Repeatedly updates, renders, sleeps */
         public void run(){
+                /*
+                   Repeatedly update, render, sleep
+                   so loop takes close  to period nsecs.
+
+                   Sleep inaccuracies are handled.
+                   The timing calculation used the Java
+                   timer.
+
+                   Overruns in update/renders will
+                   cause extra updates to be
+                   carried out so UPS tild==requested FPS
+
+                 */
                 long beforeTime ;
-                long beforeNanoTime ;
-                long beforeJ3DTime ;
+                long afterTime  ;
+                //long beforeNanoTime ;
+                //long beforeJ3DTime ;
+                long overSleepTime = 0L ;
+                int noDelays = 0 ;
+                long excess = 0L ;
                 long timeDiff ;
                 long sleepTime ;
                 long period = 10 ;
-                running =  true ;
                 beforeTime = System.nanoTime();
-                while(running){
-                        gameUpdate() ;
+                running =  true ;
+
+                while(running) {
+                        gameUpdate(); //gameUpdate-1
+                        //gameUpdate(); //gameUpdate-2
                         gameRender();
                         paintScreen();
-                        timeDiff = System.nanoTime() - beforeTime ;
-                        timeDiff = period - timeDiff;
+                        afterTime = System.nanoTime();
+                        timeDiff = afterTime - beforeTime;
+                        sleepTime = (period - timeDiff) - overSleepTime;
+
+                        if (sleepTime > 0) {
+                                try {
+                                        Thread.sleep(sleepTime / 1000000L); //nano - >ms;
+                                } catch (InterruptedException e) {
+                                }
+                                overSleepTime = (System.nanoTime() - afterTime) - sleepTime;
+                        } else {
+                                //sleepTime <= 0 ; then frame took longer than the period
+                                excess -= sleepTime;
+                                overSleepTime = 0L;
+                                if (++noDelays >= NO_DELAYS_PER_YIELD) {
+                                        Thread.yield(); //let some other thread run
+                                        noDelays = 0;
+                                }
+                        }
+                        beforeTime = System.nanoTime();
+                        /*
+                                If frame animation is taking too long,
+                                update the game state without  rendenring
+                                it, to gt the updates/nearer to the
+                                required FPS
+                         */
+                        int skips = 0;
+                        while ((excess > period) && (skips < MAX_FRAME_SKIPS)) {
+                                excess -= period;
+                                gameUpdate(); //update state but don't render
+                        }
+                        System.exit(0);
+                /*
+
                         if(timeDiff<= 0){
                                 sleepTime = 5 ;
                         }
@@ -195,11 +297,45 @@ public class GamePanel extends JPanel implements Runnable {
                         beforeTime = System.nanoTime() ;
                 }
                 System.exit(0);
+                */
+                }
         }
-        /** */
+        /**
+         * We update the game state here....
+         * */
         private void gameUpdate(){
-                if(!gameOver){
+                /**
+                 * We implementing pausing
+                 * the game not by stopping the
+                 * game run() thread because
+                 * that could cause emergent
+                 * deadlocks....no...we should
+                 * only prvent the game from updating
+                 * while letting the game run thread to run...
+                 * also...if no for other reasons such as network
+                 * updates can still be processed...
+                 *
+                 *
+                 * When should we pause/resume ?
+                 * When the user returns to the page, the applet/program
+                 * starts again....the same sequence should be triggered when
+                 * the user minimizes the applet's page and reopens it later.....
+                 *
+                 * in any application, pausing should be initiated when the window
+                 * is minimized or eactivated, and execution should resume when the
+                 * window is enlarged or activated.  A window is deactivated when it is
+                 * obsucred and activated when broung back to the front.
+                 *
+                 *
+                 * In a a full-screen application pausing and resumpition will be
+                 * controlled by buttons on the canvas since the user
+                 * interface lacks a tigle bar and the OS taskbar is hidden.
+                 *
+                 *
+                 */
+                if(!isPaused && !gameOver){
                         //update game state
                 }
         }
+
 }
