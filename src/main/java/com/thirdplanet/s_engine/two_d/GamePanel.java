@@ -93,7 +93,16 @@ public class GamePanel extends JPanel implements Runnable {
         /**Wait for the JPanel to be added to the
          * JFrame/JApplet before starting via
          * creating a peer and then starting the
-         * thread.*/
+         * thread.
+         *
+         * About addNotify():
+         * Makes this component displayable by connecting
+         * it to a native screen resource.
+         * This method is called internlly by the toolkit
+         * and usually should not be called diretly
+         * by programs...
+         *
+         * */
         public void addNotify(){
                 super.addNotify() ;
                 startGame() ;
