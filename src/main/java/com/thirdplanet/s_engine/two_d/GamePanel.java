@@ -261,7 +261,7 @@ public class GamePanel extends JPanel implements Runnable {
                 while(running) {
                         gameUpdate(); //gameUpdate-1
                         //gameUpdate(); //gameUpdate-2
-                        gameRender();
+                        //gameRender();
                         paintScreen();
                         afterTime = System.nanoTime();
                         timeDiff = afterTime - beforeTime;

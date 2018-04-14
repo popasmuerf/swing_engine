@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="14.2">
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>150</x>
+      <y>90</y>
+      <w>210</w>
+      <h>420</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;Stereotype&gt;&gt;
+Package::com.thirdplanet.s_engine.two_d
+{Some Properties}
+--
+-PWIDTH: int
+-PHEIGHT: int
+-animator: Thread
+-running: Boolean
+-gameover: Boolean
+-isPaused: Boolean
+-MAX_FRAME_SKIPS: int
+-NO_DELAYS_PER_YIELD: int
+-dbg: Graphics
+-dbImage: Image
+-msg: String
+-x:int
+-y:int
+_-ClassAttribute: Long_
+--
+#GamePanel(): int
+GamePanel(i: int): int
+addNotify(): void
+startGame(): void
+stopGame(): void
+pauseGame(): void
+resumeGame(): void
+testPress(x:int,y:int): void 
+readyForTermination(): void
+gameRender(): void
+paintScreen(): void
+run(): void
+
+
+gameOverMessage(g:Graphics): void
+
+/+AbstractOperation()/
+--
+Responsibilities
+-- Resp1
+*-- Resp2*</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>
